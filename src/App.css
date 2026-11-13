@@ -683,6 +683,22 @@ button {
     padding: 12px;
     font-size: 16px;
   }
+  .sidebar-post,
+  .composer__tools .post-button,
+  .premium-page .post-button,
+  .mobile-premium-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .composer__tools .post-button {
+    min-width: 70px;
+  }
+  .premium-page .post-button {
+    min-width: 180px;
+    margin-inline: auto;
+  }
   .sidebar-post::after {
     content: '';
   }
