@@ -661,6 +661,11 @@ button {
   .mobile-premium-link {
     min-height: 40px;
   }
+  .mobile-premium-link {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
   .sidebar--open {
     position: fixed;
     z-index: 10;
@@ -677,9 +682,14 @@ button {
   .sidebar .nav-item {
     font-size: 17px;
   }
-  .sidebar-post {
+  .sidebar--open nav {
     width: 100%;
+  }
+  .sidebar-post {
+    width: calc(100% - 16px);
     height: auto;
+    margin-inline: auto;
+    align-self: center;
     padding: 12px;
     font-size: 16px;
   }
