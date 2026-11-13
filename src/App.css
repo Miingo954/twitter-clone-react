@@ -20,6 +20,7 @@ textarea {
 }
 button {
   cursor: pointer;
+  touch-action: manipulation;
 }
 .social-app {
   --page: #000;
@@ -420,6 +421,9 @@ button {
   background: transparent;
   color: var(--text);
 }
+.follow-button {
+  flex: 0 0 auto;
+}
 .legal {
   padding: 0 8px;
   color: var(--soft);
@@ -429,6 +433,24 @@ button {
 .mobile-header,
 .mobile-nav {
   display: none;
+}
+.mobile-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mobile-premium-link {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.mobile-premium-link.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .theme-toggle {
   position: fixed;
@@ -635,6 +657,10 @@ button {
     height: 36px;
     font-size: 26px;
   }
+  .mobile-header .icon-button,
+  .mobile-premium-link {
+    min-height: 40px;
+  }
   .sidebar--open {
     position: fixed;
     z-index: 10;
@@ -712,6 +738,28 @@ button {
   }
   .profile-cover {
     height: 145px;
+  }
+  .follow-button,
+  .profile-actions a,
+  .profile-actions button,
+  .premium-page .post-button {
+    min-height: 44px;
+  }
+  .message-thread {
+    min-height: calc(100vh - 107px);
+    padding-bottom: 92px;
+  }
+  .message-composer {
+    position: sticky;
+    z-index: 4;
+    bottom: 64px;
+    min-height: 48px;
+    background: var(--surface);
+  }
+  .message-composer button {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
   }
 }
 @media (max-width: 420px) {

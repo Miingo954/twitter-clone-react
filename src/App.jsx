@@ -209,6 +209,8 @@ const navItems = [
   ['Events', '◷', '/events'],
   ['Creator Studio', '▥', '/studio'],
   ['Profile', '◉', '/profile'],
+  ['Premium', '✦', '/premium'],
+  ['Connect', '◎', '/connect'],
 ]
 
 const communities = [
@@ -657,14 +659,19 @@ function SocialApp() {
         <Link className="x-logo" to="/" aria-label="X home">
           𝕏
         </Link>
-        <button
-          className="icon-button"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-expanded={menuOpen}
-          aria-label="Open navigation"
-        >
-          ☰
-        </button>
+        <div className="mobile-header__actions">
+          <Link className={`mobile-premium-link ${premium ? 'is-active' : ''}`} to="/premium">
+            {premium ? 'Premium ✓' : 'Premium'}
+          </Link>
+          <button
+            className="icon-button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-expanded={menuOpen}
+            aria-label="Open navigation"
+          >
+            ☰
+          </button>
+        </div>
       </header>
       <aside className={`sidebar ${menuOpen ? 'sidebar--open' : ''}`}>
         <Link className="x-logo x-logo--desktop" to="/" aria-label="X home">
