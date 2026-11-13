@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { HashRouter, Link, NavLink, useLocation } from 'react-router-dom'
 import './App.css'
 
@@ -238,6 +238,32 @@ const gifOptions = [
   ['https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif', 'Happy reaction GIF'],
 ]
 
+const starterMessages = {
+  dev: [
+    {
+      id: 'dev-1',
+      sender: 'dev',
+      body: 'Hey Jamal, the new social feed looks great. Are you planning to add Firebase next?',
+    },
+    {
+      id: 'dev-2',
+      sender: 'jamal',
+      body: 'Yep — guest access first, then Firebase Auth and Firestore for real posts.',
+    },
+  ],
+  maya: [{ id: 'maya-1', sender: 'maya', body: 'I left feedback on your latest post.' }],
+  jordan: [{ id: 'jordan-1', sender: 'jordan', body: 'Your portfolio is really coming together.' }],
+}
+
+function readLocalState(key, fallback) {
+  try {
+    const stored = window.localStorage.getItem(key)
+    return stored ? JSON.parse(stored) : fallback
+  } catch {
+    return fallback
+  }
+}
+
 function Avatar({ person, large = false }) {
   const item = people[person]
   return (
@@ -246,6 +272,20 @@ function Avatar({ person, large = false }) {
       src={item.photo}
       alt={`${item.name} profile`}
     />
+  )
+}
+
+function FollowButton({ person, following, onToggle, className = '' }) {
+  const isFollowing = following.includes(person)
+  return (
+    <button
+      type="button"
+      className={`${className} follow-button ${isFollowing ? 'is-following' : ''}`.trim()}
+      aria-pressed={isFollowing}
+      onClick={() => onToggle(person)}
+    >
+      {isFollowing ? 'Following' : 'Follow'}
+    </button>
   )
 }
 
@@ -412,7 +452,7 @@ function Composer({
   )
 }
 
-function SideRail() {
+function SideRail({ following, onToggleFollow, premium }) {
   return (
     <aside className="right-rail">
       <Link className="search-box" to="/search">
@@ -420,10 +460,14 @@ function SideRail() {
         <span>Search X</span>
       </Link>
       <section className="card subscribe-card">
-        <h2>Subscribe to Premium</h2>
-        <p>Get verified, post longer videos, and reach more people.</p>
+        <h2>{premium ? 'Premium is active' : 'Subscribe to Premium'}</h2>
+        <p>
+          {premium
+            ? 'Your verified badge and creator features are ready.'
+            : 'Get verified, post longer videos, and reach more people.'}
+        </p>
         <Link className="post-button" to="/premium">
-          Subscribe
+          {premium ? 'Manage Premium' : 'Subscribe'}
         </Link>
       </section>
       <section className="card trends-card">
@@ -451,7 +495,7 @@ function SideRail() {
                 <small>{people[id].handle}</small>
               </span>
             </Link>
-            <button>Follow</button>
+            <FollowButton person={id} following={following} onToggle={onToggleFollow} />
           </div>
         ))}
         <button className="show-more">Show more</button>
@@ -480,6 +524,8 @@ function PageHeader({ title, subtitle }) {
 
 function SocialApp() {
   const location = useLocation()
+  const previousPath = useRef(location.pathname)
+  const [routeLoading, setRouteLoading] = useState(false)
   const [posts, setPosts] = useState(starterPosts)
   const [draft, setDraft] = useState('')
   const [attachment, setAttachment] = useState(null)
@@ -488,6 +534,10 @@ function SocialApp() {
   const [darkMode, setDarkMode] = useState(true)
   const [joinedCommunities, setJoinedCommunities] = useState(['Frontend Friday'])
   const [searchQuery, setSearchQuery] = useState('')
+  const [following, setFollowing] = useState(() => readLocalState('x-demo-following', ['maya']))
+  const [premium, setPremium] = useState(() => readLocalState('x-demo-premium', false))
+  const [messages, setMessages] = useState(() => readLocalState('x-demo-messages', starterMessages))
+  const [messageDraft, setMessageDraft] = useState('')
   const routeParts = location.pathname.split('/').filter(Boolean)
   const profileId = routeParts[0] === 'profile' ? routeParts[1] || 'jamal' : null
   const activeProfile = profileId && people[profileId] ? profileId : 'jamal'
@@ -518,6 +568,41 @@ function SocialApp() {
       }[location.pathname] || 'Home'
     )
   }, [location.pathname])
+
+  useEffect(() => {
+    if (previousPath.current === location.pathname) return
+    previousPath.current = location.pathname
+    setRouteLoading(true)
+    const timer = window.setTimeout(() => setRouteLoading(false), 360)
+    return () => window.clearTimeout(timer)
+  }, [location.pathname])
+  useEffect(() => {
+    window.localStorage.setItem('x-demo-following', JSON.stringify(following))
+  }, [following])
+  useEffect(() => {
+    window.localStorage.setItem('x-demo-premium', JSON.stringify(premium))
+  }, [premium])
+  useEffect(() => {
+    window.localStorage.setItem('x-demo-messages', JSON.stringify(messages))
+  }, [messages])
+  function toggleFollow(person) {
+    setFollowing((current) =>
+      current.includes(person) ? current.filter((item) => item !== person) : [...current, person]
+    )
+  }
+  function sendMessage(event) {
+    event.preventDefault()
+    const body = messageDraft.trim()
+    if (!body || !messageId || !people[messageId]) return
+    setMessages((current) => ({
+      ...current,
+      [messageId]: [
+        ...(current[messageId] || []),
+        { id: crypto.randomUUID(), sender: 'jamal', body },
+      ],
+    }))
+    setMessageDraft('')
+  }
   function focusComposer() {
     document.querySelector('#post-composer')?.focus()
   }
@@ -563,6 +648,8 @@ function SocialApp() {
       ))}
     </section>
   )
+
+  if (routeLoading) return <SocialRouteSkeleton darkMode={darkMode} />
 
   return (
     <div className={`social-app ${darkMode ? 'theme-dark' : 'theme-light'}`}>
@@ -773,13 +860,7 @@ function SocialApp() {
                     <small>
                       {people[person].handle} · {index + 1}h
                     </small>
-                    <p>
-                      {index === 0
-                        ? 'The social feed looks great. Are you planning to add Firebase next?'
-                        : index === 1
-                          ? 'I left feedback on your latest post.'
-                          : 'Your portfolio is really coming together.'}
-                    </p>
+                    <p>{messages[person]?.at(-1)?.body || 'Start a conversation'}</p>
                   </span>
                 </Link>
               ))}
@@ -791,15 +872,24 @@ function SocialApp() {
             <PageHeader title={people[messageId].name} subtitle={people[messageId].handle} />
             <section className="message-thread">
               <p className="thread-date">Today</p>
-              <div className="message-bubble message-bubble--them">
-                Hey Jamal, the new social feed looks great. Are you planning to add Firebase next?
-              </div>
-              <div className="message-bubble message-bubble--me">
-                Yep — guest access first, then Firebase Auth and Firestore for real posts.
-              </div>
-              <form className="message-composer">
-                <input placeholder="Start a new message" />
-                <button aria-label="Send message">➤</button>
+              {(messages[messageId] || []).map((message) => (
+                <div
+                  className={`message-bubble message-bubble--${message.sender === 'jamal' ? 'me' : 'them'}`}
+                  key={message.id}
+                >
+                  {message.body}
+                </div>
+              ))}
+              <form className="message-composer" onSubmit={sendMessage}>
+                <input
+                  value={messageDraft}
+                  onChange={(event) => setMessageDraft(event.target.value)}
+                  placeholder="Start a new message"
+                  aria-label={`Message ${people[messageId].name}`}
+                />
+                <button disabled={!messageDraft.trim()} aria-label="Send message">
+                  ➤
+                </button>
               </form>
             </section>
           </>
@@ -909,14 +999,20 @@ function SocialApp() {
                       .includes(searchQuery.toLowerCase())
                 )
                 .map(([id, person]) => (
-                  <Link className="search-person" key={id} to={`/profile/${id}`}>
-                    <Avatar person={id} />
-                    <span>
+                  <article className="search-person" key={id}>
+                    <Link to={`/profile/${id}`}>
+                      <Avatar person={id} />
+                    </Link>
+                    <Link className="search-person__identity" to={`/profile/${id}`}>
                       <strong>{person.name}</strong>
                       <small>{person.handle}</small>
-                    </span>
-                    <b>Follow</b>
-                  </Link>
+                    </Link>
+                    {id === 'jamal' ? (
+                      <b>You</b>
+                    ) : (
+                      <FollowButton person={id} following={following} onToggle={toggleFollow} />
+                    )}
+                  </article>
                 ))}
             </section>
           </>
@@ -1041,7 +1137,7 @@ function SocialApp() {
                     </Link>
                     <p>Follow to see their latest posts and conversations.</p>
                   </div>
-                  <button>Follow</button>
+                  <FollowButton person={person} following={following} onToggle={toggleFollow} />
                 </article>
               ))}
             </section>
@@ -1060,7 +1156,11 @@ function SocialApp() {
                   </Link>
                 ) : (
                   <span className="profile-actions">
-                    <button>Follow</button>
+                    <FollowButton
+                      person={activeProfile}
+                      following={following}
+                      onToggle={toggleFollow}
+                    />
                     <Link to={`/messages/${activeProfile}`}>Message</Link>
                   </span>
                 )}
@@ -1127,7 +1227,7 @@ function SocialApp() {
                       </Link>
                       <p>Building useful things and sharing what they learn along the way.</p>
                     </div>
-                    <button>Follow</button>
+                    <FollowButton person={person} following={following} onToggle={toggleFollow} />
                   </article>
                 ))}
               </section>
@@ -1149,12 +1249,19 @@ function SocialApp() {
             <PageHeader title="Premium" />
             <section className="premium-page">
               <span className="premium-mark">𝕏</span>
-              <h2>Upgrade your experience</h2>
+              <h2>{premium ? 'You’re subscribed to Premium' : 'Upgrade your experience'}</h2>
               <p>
-                Get priority replies, longer posts, a verified badge, and creator tools in this
-                portfolio demo.
+                {premium
+                  ? 'Your verified badge, longer posts, and creator tools are active in this demo.'
+                  : 'Get priority replies, longer posts, a verified badge, and creator tools in this portfolio demo.'}
               </p>
-              <button className="post-button">Choose Premium</button>
+              <button
+                className={`post-button ${premium ? 'is-subscribed' : ''}`}
+                aria-pressed={premium}
+                onClick={() => setPremium((current) => !current)}
+              >
+                {premium ? 'Cancel Premium' : 'Choose Premium'}
+              </button>
             </section>
           </>
         )}
@@ -1178,7 +1285,7 @@ function SocialApp() {
           </>
         )}
       </main>
-      <SideRail />
+      <SideRail following={following} onToggleFollow={toggleFollow} premium={premium} />
       <button
         className="theme-toggle"
         onClick={() => setDarkMode(!darkMode)}
@@ -1195,6 +1302,41 @@ function SocialApp() {
         <button onClick={focusComposer}>＋</button>
       </nav>
     </div>
+  )
+}
+
+function SocialRouteSkeleton({ darkMode }) {
+  return (
+    <main
+      className={`social-route-skeleton ${darkMode ? 'theme-dark' : 'theme-light'}`}
+      aria-busy="true"
+      aria-label="Loading page"
+    >
+      <aside className="social-route-skeleton__sidebar">
+        <span className="social-route-skeleton__logo" />
+        {Array.from({ length: 7 }, (_, index) => (
+          <span className="social-route-skeleton__link" key={index} />
+        ))}
+      </aside>
+      <section className="social-route-skeleton__feed">
+        <span className="social-route-skeleton__heading" />
+        {Array.from({ length: 4 }, (_, index) => (
+          <article className="social-route-skeleton__post" key={index}>
+            <span className="social-route-skeleton__avatar" />
+            <div>
+              <span className="social-route-skeleton__line" />
+              <span className="social-route-skeleton__line social-route-skeleton__line--wide" />
+              <span className="social-route-skeleton__line social-route-skeleton__line--medium" />
+            </div>
+          </article>
+        ))}
+      </section>
+      <aside className="social-route-skeleton__aside">
+        <span />
+        <span />
+        <span />
+      </aside>
+    </main>
   )
 }
 
