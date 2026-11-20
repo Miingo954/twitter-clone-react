@@ -1,30 +1,53 @@
 # X-Style Social Feed
 
-A responsive social-media portfolio project built with React, JavaScript, and CSS. It is an independent interface study with a full guest-friendly experience—no account required to explore.
+An interactive social platform interface with feeds, profiles, messaging, notifications, bookmarks, search, and post composition.
 
-## Highlights
+## Features
 
-- Responsive desktop, tablet, and mobile navigation
-- Long home and discovery feeds with clickable post-detail pages
-- Individual profiles, follower/following pages, messages, communities, lists, events, creator studio, search, Premium, and settings routes
-- Interactive composer with emoji and GIF attachments
-- Likes, reposts, join/leave communities, and local post creation
-- Local profile asset and accessible, semantic controls
-- Firebase installed and ready for the authentication/Firestore phase
+- Responsive home feed
+- Profiles and post composition
+- Messages and notifications
+- Bookmarks and search
+- Media-friendly posts
+- Guest-accessible demo flow
 
-## Run locally
+## Built With
+
+- React
+- Vite
+- JavaScript
+- React Router
+
+## Requirements
+
+- Node.js 20 or newer
+- npm
+
+## Installation
 
 ```bash
+git clone https://github.com/Miingo954/twitter-clone-react.git
+cd twitter-clone-react
 npm install
+```
+
+## Run Locally
+
+```bash
 npm run dev
 ```
 
-## Quality checks
+Open the local URL shown in your terminal.
+
+## Available Scripts
 
 ```bash
-npm run format:check
-npm run lint
+npm run dev
 npm run build
+npm run preview
+npm run lint
 ```
 
-This project is intended for portfolio demonstration and uses custom sample content.
+## Author
+
+Jamal Ferguson — front-end developer based in Northern California.
